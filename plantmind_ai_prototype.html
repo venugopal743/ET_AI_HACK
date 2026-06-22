@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlantMind AI — Unified Asset &amp; Operations Brain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e14;
+    --bg-elev:#0d141f;
+    --surface:#121b29;
+    --surface-2:#16223380;
+    --border:#22304533;
+    --border-solid:#243248;
+    --text:#e7edf5;
+    --text-dim:#8b9bb3;
+    --text-faint:#5b6b85;
+    --cyan:#34d4e8;
+    --green:#3fdb98;
+    --amber:#f5b542;
+    --violet:#a78bfa;
+    --danger:#f87171;
+    --radius:10px;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);}
+  body{min-height:100vh;}
+  ::selection{background:#1f3a4a;}
+  a{color:var(--cyan);}
+  button{font-family:var(--body);cursor:pointer;}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+
+  .app{max-width:1180px;margin:0 auto;padding:0 20px 64px;}
+
+  /* ---- Header ---- */
+  header.top{
+    padding:28px 0 22px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
+    border-bottom:1px solid var(--border-solid);
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;gap:14px;align-items:center;}
+  .brand-mark{
+    width:42px;height:42px;border-radius:9px;
+    background:radial-gradient(circle at 30% 30%, #1c2b3d, #0d141f);
+    border:1px solid var(--border-solid);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:24px;height:24px;}
+  .brand h1{
+    font-family:var(--display);font-size:21px;font-weight:700;margin:0;
+    letter-spacing:0.2px;
+  }
+  .brand p{margin:2px 0 0;color:var(--text-dim);font-size:13px;}
+  .status-line{
+    font-family:var(--mono);font-size:11.5px;color:var(--text-faint);
+    text-align:right;line-height:1.6;
+  }
+  .status-line b{color:var(--green);font-weight:500;}
+
+  /* ---- Nav ---- */
+  nav.tabs{
+    display:flex;gap:4px;margin-bottom:24px;
+    border-bottom:1px solid var(--border-solid);
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    background:none;border:none;color:var(--text-dim);
+    padding:11px 16px;font-size:13.5px;font-weight:500;
+    border-bottom:2px solid transparent;white-space:nowrap;
+    transition:color .15s, border-color .15s;
+  }
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button.active{color:var(--text);border-bottom-color:var(--cyan);}
+  nav.tabs button .n{font-family:var(--mono);color:var(--text-faint);margin-right:6px;font-size:11px;}
+
+  .panel{display:none;animation:fadeIn .25s ease;}
+  .panel.active{display:block;}
+  @media (prefers-reduced-motion: reduce){ .panel{animation:none;} }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  h2.section-title{
+    font-family:var(--display);font-size:19px;margin:0 0 4px;font-weight:600;
+  }
+  p.section-sub{color:var(--text-dim);font-size:13.5px;margin:0 0 22px;max-width:640px;line-height:1.5;}
+
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
+  @media (max-width:880px){.grid-2{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--surface);border:1px solid var(--border-solid);
+    border-radius:var(--radius);padding:18px 20px;
+  }
+  .card + .card{margin-top:14px;}
+
+  /* ---- Knowledge graph ---- */
+  .kg-wrap{display:grid;grid-template-columns:1fr 300px;gap:18px;}
+  @media (max-width:880px){.kg-wrap{grid-template-columns:1fr;}}
+  #kg-svg-holder{background:var(--bg-elev);border:1px solid var(--border-solid);border-radius:var(--radius);overflow:hidden;}
+  .kg-node-doc circle{fill:var(--surface);stroke-width:1.4;}
+  .kg-node-doc text{fill:var(--text-dim);font-family:var(--mono);font-size:9.5px;}
+  .kg-node-doc:hover circle{filter:brightness(1.3);cursor:pointer;}
+  .kg-hub circle{fill:#16223a;stroke:var(--cyan);stroke-width:1.6;}
+  .kg-hub text{fill:var(--text);font-family:var(--display);font-weight:600;font-size:13px;}
+  .kg-link{stroke:#22304570;stroke-width:1.2;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11.5px;color:var(--text-dim);}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  #doc-detail{font-size:13px;}
+  #doc-detail .empty{color:var(--text-faint);font-size:13px;}
+  .doc-detail-title{font-family:var(--display);font-weight:600;font-size:14.5px;margin-bottom:6px;}
+  .doc-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .tag{
+    font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:5px;
+    border:1px solid var(--border-solid);color:var(--text-dim);
+  }
+  .doc-text{color:var(--text-dim);line-height:1.55;font-size:12.8px;white-space:pre-wrap;}
+
+  /* ---- Add document ---- */
+  .add-doc-form{display:grid;gap:10px;margin-top:6px;}
+  .add-doc-form .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  input[type=text], textarea, select{
+    width:100%;background:var(--bg-elev);border:1px solid var(--border-solid);
+    color:var(--text);border-radius:7px;padding:9px 11px;font-family:var(--body);font-size:13px;
+  }
+  textarea{resize:vertical;min-height:70px;font-family:var(--mono);font-size:12px;line-height:1.5;}
+  label{font-size:11.5px;color:var(--text-faint);display:block;margin-bottom:4px;font-family:var(--mono);}
+
+  .btn{
+    background:linear-gradient(135deg, #1d4b52, #14323a);
+    border:1px solid #2a6470;color:var(--cyan);
+    padding:9px 16px;border-radius:7px;font-size:13px;font-weight:600;
+    transition:filter .15s;
+  }
+  .btn:hover{filter:brightness(1.25);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn.secondary{background:var(--bg-elev);border:1px solid var(--border-solid);color:var(--text-dim);}
+  .btn.secondary:hover{color:var(--text);}
+
+  /* ---- Chips ---- */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .chip{
+    background:var(--bg-elev);border:1px solid var(--border-solid);color:var(--text-dim);
+    font-size:12px;padding:6px 12px;border-radius:999px;
+  }
+  .chip:hover{color:var(--text);border-color:var(--cyan);}
+
+  .ask-row{display:flex;gap:10px;align-items:flex-end;}
+  .ask-row textarea{min-height:54px;font-family:var(--body);font-size:13.5px;}
+
+  /* ---- Result blocks ---- */
+  .result{margin-top:20px;}
+  .badge{
+    font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:5px;font-weight:500;
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .badge.High{background:#0f2e22;color:var(--green);border:1px solid #1c5c43;}
+  .badge.Medium{background:#332710;color:var(--amber);border:1px solid #6b4f17;}
+  .badge.Low{background:#341515;color:var(--danger);border:1px solid #6b2222;}
+  .badge.Met{background:#0f2e22;color:var(--green);border:1px solid #1c5c43;}
+  .badge.Partial{background:#332710;color:var(--amber);border:1px solid #6b4f17;}
+  .badge.Gap{background:#341515;color:var(--danger);border:1px solid #6b2222;}
+  .badge.Compliant{background:#0f2e22;color:var(--green);border:1px solid #1c5c43;}
+  .badge.Non-compliant{background:#341515;color:var(--danger);border:1px solid #6b2222;}
+
+  .answer-text{font-size:14.5px;line-height:1.65;margin:10px 0 14px;}
+  .citation-list{display:grid;gap:8px;margin-top:6px;}
+  .citation{
+    background:var(--bg-elev);border:1px solid var(--border-solid);border-left:2px solid var(--cyan);
+    padding:8px 12px;border-radius:6px;font-size:12.5px;
+  }
+  .citation b{color:var(--text);font-weight:600;display:block;margin-bottom:2px;font-size:12px;}
+  .citation span{color:var(--text-dim);}
+  ul.actions{margin:8px 0 0;padding-left:18px;}
+  ul.actions li{margin-bottom:5px;font-size:13.3px;line-height:1.5;}
+  .label-sm{font-family:var(--mono);font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 6px;}
+
+  table.gap-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;}
+  table.gap-table th{
+    text-align:left;font-family:var(--mono);font-size:11px;color:var(--text-faint);
+    padding:6px 10px;border-bottom:1px solid var(--border-solid);text-transform:uppercase;letter-spacing:.03em;
+  }
+  table.gap-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+
+  .spinner{
+    display:inline-block;width:14px;height:14px;border-radius:50%;
+    border:2px solid #2a3a52;border-top-color:var(--cyan);
+    animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none;border-top-color:#2a3a52;} }
+  .loading-line{color:var(--text-dim);font-size:13px;display:flex;align-items:center;}
+  .error-box{
+    background:#2a1414;border:1px solid #5c2222;color:#f5a3a3;padding:12px 14px;
+    border-radius:7px;font-size:13px;margin-top:14px;
+  }
+
+  select.asset-select{max-width:260px;}
+
+  .ev-pack{margin-top:18px;display:grid;gap:10px;}
+  .ev-item{background:var(--bg-elev);border:1px solid var(--border-solid);border-radius:7px;padding:11px 14px;}
+  .ev-item .meta{font-family:var(--mono);font-size:10.5px;color:var(--text-faint);margin-bottom:5px;}
+  .ev-item .body{font-size:12.6px;color:var(--text-dim);line-height:1.5;}
+
+  footer{
+    margin-top:48px;padding-top:18px;border-top:1px solid var(--border-solid);
+    color:var(--text-faint);font-size:11.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .pill{font-family:var(--mono);font-size:11px;color:var(--text-faint);border:1px solid var(--border-solid);border-radius:999px;padding:4px 10px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="2.2" fill="#34d4e8"/>
+          <circle cx="5" cy="6" r="1.6" fill="#3fdb98"/>
+          <circle cx="19" cy="6" r="1.6" fill="#3fdb98"/>
+          <circle cx="5" cy="18" r="1.6" fill="#f5b542"/>
+          <circle cx="19" cy="18" r="1.6" fill="#f5b542"/>
+          <path d="M12 12L5 6M12 12L19 6M12 12L5 18M12 12L19 18" stroke="#22304a" stroke-width="1"/>
+        </svg>
+      </div>
+      <div>
+        <h1>PlantMind AI</h1>
+        <p>Unified Asset &amp; Operations Brain — working prototype</p>
+      </div>
+    </div>
+    <div class="status-line" id="status-line"></div>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-tab="kg"><span class="n">01</span>Knowledge Graph</button>
+    <button data-tab="copilot"><span class="n">02</span>Expert Knowledge Copilot</button>
+    <button data-tab="rca"><span class="n">03</span>Maintenance RCA Agent</button>
+    <button data-tab="compliance"><span class="n">04</span>Compliance Gap Agent</button>
+    <button data-tab="evidence"><span class="n">05</span>Audit Evidence Builder</button>
+  </nav>
+
+  <!-- ============ TAB 1: KNOWLEDGE GRAPH ============ -->
+  <section class="panel active" id="panel-kg">
+    <h2 class="section-title">Equipment-centric knowledge graph</h2>
+    <p class="section-sub">Every ingested document is linked to an asset. Click a node to inspect what PlantMind actually knows before it answers anything.</p>
+
+    <div class="kg-wrap">
+      <div id="kg-svg-holder"></div>
+      <div class="card">
+        <div class="label-sm" style="margin-top:0;">Selected document</div>
+        <div id="doc-detail"><p class="empty">Click any document node on the graph to view its content and metadata.</p></div>
+      </div>
+    </div>
+    <div class="legend" id="kg-legend"></div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="label-sm" style="margin-top:0;">Ingest a new document</div>
+      <p style="color:var(--text-dim);font-size:12.5px;margin:0 0 10px;">Simulates the Universal Document Ingestion agent. In production this stage runs OCR + tag extraction on PDFs, P&amp;IDs and scanned forms — here, paste text directly to add it to the live knowledge graph and copilot index.</p>
+      <div class="add-doc-form">
+        <div class="row">
+          <div>
+            <label>Document title</label>
+            <input type="text" id="nd-title" placeholder="e.g. Inspection Report — Pump P-101 (Jul 2026)">
+          </div>
+          <div>
+            <label>Asset tag</label>
+            <input type="text" id="nd-asset" placeholder="e.g. P-101">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Document type</label>
+            <input type="text" id="nd-type" placeholder="e.g. Inspection Report">
+          </div>
+          <div>
+            <label>Date</label>
+            <input type="text" id="nd-date" placeholder="e.g. 2026-07-12">
+          </div>
+        </div>
+        <div>
+          <label>Content</label>
+          <textarea id="nd-text" placeholder="Paste the document text..."></textarea>
+        </div>
+        <div><button class="btn" id="nd-submit">Add to knowledge graph</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: COPILOT ============ -->
+  <section class="panel" id="panel-copilot">
+    <h2 class="section-title">Expert Knowledge Copilot</h2>
+    <p class="section-sub">Ask a question the way a technician or engineer would. Answers are generated only from the documents in the graph, with citations and a confidence score — never silent guessing.</p>
+
+    <div class="chips" id="copilot-chips"></div>
+    <div class="ask-row">
+      <textarea id="copilot-input" placeholder="Ask anything about an asset, e.g. &quot;Pump P-101 failed twice this month. What is the likely root cause?&quot;"></textarea>
+      <button class="btn" id="copilot-ask">Ask</button>
+    </div>
+    <div id="copilot-result"></div>
+  </section>
+
+  <!-- ============ TAB 3: RCA ============ -->
+  <section class="panel" id="panel-rca">
+    <h2 class="section-title">Maintenance &amp; RCA Agent</h2>
+    <p class="section-sub">Fuses work history, OEM thresholds and inspection findings for one asset to propose a likely root cause and next checks — the connections a single document never shows on its own.</p>
+
+    <label>Select asset</label>
+    <select class="asset-select" id="rca-asset"></select>
+    <div style="margin-top:12px;"><button class="btn" id="rca-run">Run RCA</button></div>
+    <div id="rca-result"></div>
+  </section>
+
+  <!-- ============ TAB 4: COMPLIANCE ============ -->
+  <section class="panel" id="panel-compliance">
+    <h2 class="section-title">Compliance Gap Agent</h2>
+    <p class="section-sub">Checks an asset's procedures, inspections and audit history against a baseline requirements checklist, and flags exactly where evidence is missing or overdue.</p>
+
+    <label>Select asset</label>
+    <select class="asset-select" id="comp-asset"></select>
+    <div style="margin-top:12px;"><button class="btn" id="comp-run">Check compliance</button></div>
+    <div id="comp-result"></div>
+  </section>
+
+  <!-- ============ TAB 5: EVIDENCE ============ -->
+  <section class="panel" id="panel-evidence">
+    <h2 class="section-title">Audit Evidence Builder</h2>
+    <p class="section-sub">Compiles every traceable document for an asset into one evidence pack, with an optional AI-written audit narrative that still cites every source by name.</p>
+
+    <label>Select asset</label>
+    <select class="asset-select" id="ev-asset"></select>
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn secondary" id="ev-build">Compile evidence pack</button>
+      <button class="btn" id="ev-summarize">Generate audit summary</button>
+      <button class="btn secondary" id="ev-download">Download as .txt</button>
+    </div>
+    <div id="ev-summary"></div>
+    <div class="ev-pack" id="ev-pack"></div>
+  </section>
+
+  <footer>
+    <span>PlantMind AI · ET AI Hackathon 2026 · Problem Statement #8</span>
+    <span>Team: Sanith Akula · Chunchu Venugopal</span>
+  </footer>
+</div>
+
+<script>
+/* ====================== DOCUMENT CORPUS ====================== */
+let DOCS = [
+  {id:'log-p101', title:'Maintenance Log — Pump P-101', asset:'P-101', type:'Maintenance Log', date:'2026-06-02',
+   text:`Jan 14, 2026: Reported seal leakage at Pump P-101 discharge-side seal. Minor vibration noted during walkdown. Mechanical seal replaced (OEM part #MS-220). Pump returned to service same day.
+Apr 02, 2026: Routine lubrication and bearing check. No anomalies recorded.
+Jun 02, 2026: Second occurrence of seal leakage and elevated vibration on Pump P-101, same discharge-side seal location as the January event. Operator noted the pump "running hotter than usual." Logged for engineering review.`},
+
+  {id:'manual-p101', title:'OEM Manual — Centrifugal Pump XP-200 (P-101 model)', asset:'P-101', type:'OEM Manual', date:'Reference',
+   text:`Pump model XP-200 maximum continuous operating pressure: 18 bar. Shaft alignment tolerance: 0.05 mm TIR. Misalignment beyond tolerance is identified as the leading cause of premature mechanical seal wear and elevated vibration. Recommended alignment verification interval: every 6 months, or immediately after any seal replacement. Expected mechanical seal service life under normal conditions: 18-24 months.`},
+
+  {id:'insp-p101-may', title:'Inspection Report — Pump P-101 (May 2026)', asset:'P-101', type:'Inspection Report', date:'2026-05-10',
+   text:`Vibration reading: 7.8 mm/s RMS, above the 4.5 mm/s alert threshold. Shaft alignment was not verified during this inspection; the last recorded alignment check predates the January 2026 seal replacement. Inspector recommendation: schedule shaft realignment within 30 days. Status at time of report: open, no completion date assigned.`},
+
+  {id:'sop-114', title:'SOP-114 — Pump Seal Replacement Procedure', asset:'P-101', type:'Safety Procedure', date:'Rev. 2023-09',
+   text:`Procedure SOP-114 covers mechanical seal replacement on centrifugal pumps. Required PPE: safety glasses, gloves, hearing protection. Lockout-tagout (LOTO) must be applied and verified before seal removal. The procedure does not currently include a post-replacement shaft alignment verification step. Last revised September 2023.`},
+
+  {id:'audit-q1', title:'Internal Audit Record — Q1 2026', asset:'P-101', type:'Audit Record', date:'2026-03-28',
+   text:`Audit finding AF-07: Pump P-101 shaft alignment inspection is overdue relative to the interval defined in OEM documentation. Corrective action CA-112 assigned to the maintenance team, due date 2026-04-30. Status as of audit close: open. No evidence of closure found in any subsequent maintenance or inspection record.`},
+
+  {id:'log-c204', title:'Maintenance Log — Compressor C-204', asset:'C-204', type:'Maintenance Log', date:'2026-06-10',
+   text:`Routine oil change and filter replacement completed. No abnormal readings observed. Next scheduled service in 90 days.`},
+
+  {id:'insp-c204', title:'Inspection Report — Compressor C-204 (Jun 2026)', asset:'C-204', type:'Inspection Report', date:'2026-06-08',
+   text:`All readings within normal operating range. No nonconformities identified. Alignment and vibration checks are current and within tolerance.`},
+];
+
+const CHECKLIST = [
+  {id:'c1', requirement:'Lockout-tagout (LOTO) steps documented in the maintenance procedure'},
+  {id:'c2', requirement:'Required PPE clearly specified in the procedure'},
+  {id:'c3', requirement:'A post-maintenance verification step (e.g. alignment or leak check) is included in the procedure'},
+  {id:'c4', requirement:'Inspection-driven corrective actions are closed within their assigned due date'},
+  {id:'c5', requirement:'Inspection frequency matches the OEM-recommended interval'},
+];
+
+const TYPE_COLORS = {
+  'Maintenance Log':'#34d4e8', 'OEM Manual':'#a78bfa', 'Inspection Report':'#f5b542',
+  'Safety Procedure':'#3fdb98', 'Audit Record':'#f87171'
+};
+
+/* ====================== SIMPLE TF-IDF RETRIEVAL ====================== */
+const STOP = new Set(['the','a','an','is','are','was','were','to','of','in','on','for','and','or','this','that','it','at','as','be','by','what','should','we','before','next','with','what\'s']);
+function tokenize(s){ return (s.toLowerCase().match(/[a-z0-9-]+/g) || []).filter(t=>!STOP.has(t) && t.length>1); }
+
+function retrieve(query, k=5){
+  const qTokens = tokenize(query);
+  const explicitAsset = DOCS.map(d=>d.asset).find(a => query.toUpperCase().includes(a));
+  const N = DOCS.length;
+  const df = {};
+  DOCS.forEach(d=>{ const seen=new Set(tokenize(d.text+' '+d.title)); seen.forEach(t=>df[t]=(df[t]||0)+1); });
+  const scored = DOCS.map(d=>{
+    const docTokens = tokenize(d.text+' '+d.title);
+    const tf = {};
+    docTokens.forEach(t=>tf[t]=(tf[t]||0)+1);
+    let score = 0;
+    qTokens.forEach(t=>{
+      if(tf[t]) score += tf[t] * Math.log((N+1)/(df[t]||1));
+    });
+    if(explicitAsset && d.asset===explicitAsset) score += 5;
+    return {doc:d, score};
+  });
+  scored.sort((a,b)=>b.score-a.score);
+  let top = scored.filter(s=>s.score>0).slice(0,k).map(s=>s.doc);
+  if(top.length===0) top = DOCS.slice(0,k);
+  return top;
+}
+
+function formatContext(docs){
+  return docs.map(d=>`[Doc: ${d.title} | Asset: ${d.asset} | Type: ${d.type} | Date: ${d.date}]\n${d.text}`).join('\n\n');
+}
+
+/* ====================== CLAUDE CALL ====================== */
+async function callClaude(system, user){
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: system,
+      messages: [{ role: "user", content: user }]
+    })
+  });
+  if(!response.ok){ throw new Error("API request failed ("+response.status+")"); }
+  const data = await response.json();
+  const textBlock = (data.content||[]).find(b=>b.type==='text');
+  if(!textBlock) throw new Error("No text response returned.");
+  let raw = textBlock.text.trim();
+  raw = raw.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+  try{ return JSON.parse(raw); }
+  catch(e){ throw new Error("Could not parse model response as JSON."); }
+}
+
+/* ====================== TAB SWITCHING ====================== */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ====================== STATUS LINE ====================== */
+function updateStatus(){
+  const assets = new Set(DOCS.map(d=>d.asset));
+  document.getElementById('status-line').innerHTML =
+    `<b>${DOCS.length}</b> documents indexed &nbsp;·&nbsp; <b>${assets.size}</b> assets linked<br>knowledge layer: <b>live</b>`;
+}
+
+/* ====================== KNOWLEDGE GRAPH RENDER ====================== */
+function renderKG(){
+  const holder = document.getElementById('kg-svg-holder');
+  const W = holder.clientWidth || 800, H = 420;
+  const assets = [...new Set(DOCS.map(d=>d.asset))];
+  const hubPositions = {};
+  const hubX = assets.length>1 ? [W*0.28, W*0.72] : [W*0.5];
+  assets.forEach((a,i)=>{ hubPositions[a] = {x:hubX[i] ?? W*0.5, y:H*0.5}; });
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
+
+  assets.forEach(asset=>{
+    const hub = hubPositions[asset];
+    const docs = DOCS.filter(d=>d.asset===asset);
+    const radius = 150;
+    docs.forEach((d,i)=>{
+      const angle = (i / docs.length) * Math.PI * 2 - Math.PI/2;
+      const x = hub.x + Math.cos(angle)*radius;
+      const y = hub.y + Math.sin(angle)*radius;
+      const color = TYPE_COLORS[d.type] || '#8b9bb3';
+      svg += `<line class="kg-link" x1="${hub.x}" y1="${hub.y}" x2="${x}" y2="${y}" />`;
+      svg += `<g class="kg-node-doc" data-doc="${d.id}" tabindex="0" role="button" aria-label="${d.title}">
+        <circle cx="${x}" cy="${y}" r="20" stroke="${color}" />
+        <text x="${x}" y="${y+33}" text-anchor="middle">${shorten(d.title)}</text>
+        <circle cx="${x}" cy="${y}" r="4" fill="${color}"/>
+      </g>`;
+    });
+    svg += `<g class="kg-hub"><circle cx="${hub.x}" cy="${hub.y}" r="34"/><text x="${hub.x}" y="${hub.y+5}" text-anchor="middle">${asset}</text></g>`;
+  });
+
+  svg += `</svg>`;
+  holder.innerHTML = svg;
+
+  holder.querySelectorAll('.kg-node-doc').forEach(node=>{
+    const show = ()=>showDocDetail(node.dataset.doc);
+    node.addEventListener('click', show);
+    node.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); show(); } });
+  });
+
+  const legend = document.getElementById('kg-legend');
+  legend.innerHTML = Object.entries(TYPE_COLORS).map(([type,color])=>
+    `<span><i style="background:${color}"></i>${type}</span>`).join('');
+}
+function shorten(t){ return t.length>22 ? t.slice(0,21)+'…' : t; }
+
+function showDocDetail(id){
+  const d = DOCS.find(x=>x.id===id);
+  if(!d) return;
+  document.getElementById('doc-detail').innerHTML = `
+    <div class="doc-detail-title">${d.title}</div>
+    <div class="doc-meta">
+      <span class="tag">${d.asset}</span><span class="tag">${d.type}</span><span class="tag">${d.date}</span>
+    </div>
+    <div class="doc-text">${d.text}</div>
+  `;
+}
+
+/* ====================== ADD DOCUMENT ====================== */
+document.getElementById('nd-submit').addEventListener('click', ()=>{
+  const title = document.getElementById('nd-title').value.trim();
+  const asset = document.getElementById('nd-asset').value.trim().toUpperCase();
+  const type = document.getElementById('nd-type').value.trim() || 'Document';
+  const date = document.getElementById('nd-date').value.trim() || '—';
+  const text = document.getElementById('nd-text').value.trim();
+  if(!title || !asset || !text){ alert('Please provide at least a title, asset tag and document content.'); return; }
+  DOCS.push({id:'custom-'+Date.now(), title, asset, type, date, text});
+  ['nd-title','nd-asset','nd-type','nd-date','nd-text'].forEach(id=>document.getElementById(id).value='');
+  renderKG(); updateStatus(); populateAssetSelects();
+});
+
+/* ====================== ASSET SELECTS ====================== */
+function populateAssetSelects(){
+  const assets = [...new Set(DOCS.map(d=>d.asset))];
+  ['rca-asset','comp-asset','ev-asset'].forEach(id=>{
+    const sel = document.getElementById(id);
+    const prev = sel.value;
+    sel.innerHTML = assets.map(a=>`<option value="${a}">${a}</option>`).join('');
+    if(assets.includes(prev)) sel.value = prev;
+  });
+}
+
+/* ====================== COPILOT TAB ====================== */
+const SAMPLE_QUESTIONS = [
+  "Pump P-101 failed twice this month. What is the likely root cause and what should we check before the next shift?",
+  "What was changed last time on Pump P-101?",
+  "Is Compressor C-204 due for inspection?"
+];
+document.getElementById('copilot-chips').innerHTML = SAMPLE_QUESTIONS.map(q=>`<button class="chip" type="button">${q}</button>`).join('');
+document.getElementById('copilot-chips').addEventListener('click', e=>{
+  if(e.target.classList.contains('chip')){ document.getElementById('copilot-input').value = e.target.textContent; }
+});
+
+const COPILOT_SYSTEM = `You are the Expert Knowledge Copilot inside PlantMind AI, an industrial knowledge intelligence system. Answer ONLY using the provided context documents — never invent facts outside them. For every factual claim, attribute it to a specific source document by title. Output ONLY valid JSON, no markdown fences, no preamble, matching exactly this schema:
+{"answer":"2-4 sentence direct answer to the question","confidence":"High|Medium|Low","confidence_reason":"one short sentence explaining the confidence level based on evidence consistency/completeness","citations":[{"doc_title":"...","excerpt":"short relevant excerpt or paraphrase, under 20 words"}],"recommended_actions":["short actionable step","..."]}
+If the context does not contain enough information to answer, say so plainly in "answer" and set confidence to "Low".`;
+
+document.getElementById('copilot-ask').addEventListener('click', async ()=>{
+  const q = document.getElementById('copilot-input').value.trim();
+  const resultBox = document.getElementById('copilot-result');
+  if(!q){ resultBox.innerHTML = '<div class="error-box">Type a question first.</div>'; return; }
+  resultBox.innerHTML = '<div class="result loading-line"><span class="spinner"></span>Retrieving evidence and reasoning over the knowledge graph…</div>';
+  try{
+    const docs = retrieve(q, 5);
+    const context = formatContext(docs);
+    const out = await callClaude(COPILOT_SYSTEM, `Context documents:\n\n${context}\n\nQuestion: ${q}`);
+    resultBox.innerHTML = `
+      <div class="result">
+        <span class="badge ${out.confidence}">CONFIDENCE: ${out.confidence?.toUpperCase()||'—'}</span>
+        <div class="answer-text">${out.answer||''}</div>
+        <div style="color:var(--text-faint);font-size:12px;margin-bottom:10px;">${out.confidence_reason||''}</div>
+        <div class="label-sm">Evidence cited</div>
+        <div class="citation-list">${(out.citations||[]).map(c=>`<div class="citation"><b>${c.doc_title}</b><span>${c.excerpt}</span></div>`).join('') || '<span class="error-box">No citations returned.</span>'}</div>
+        ${out.recommended_actions && out.recommended_actions.length ? `<div class="label-sm">Recommended actions</div><ul class="actions">${out.recommended_actions.map(a=>`<li>${a}</li>`).join('')}</ul>` : ''}
+      </div>`;
+  } catch(err){
+    resultBox.innerHTML = `<div class="error-box">PlantMind couldn't generate an answer: ${err.message}</div>`;
+  }
+});
+
+/* ====================== RCA TAB ====================== */
+const RCA_SYSTEM = `You are the Maintenance & RCA Agent inside PlantMind AI. Using only the provided documents for one asset, fuse failure history, OEM specifications and inspection findings into a likely root cause. Output ONLY valid JSON, no markdown fences, matching exactly:
+{"likely_root_cause":"concise root cause statement","contributing_factors":["short factor","..."],"recommended_checks":["short check or action","..."],"confidence":"High|Medium|Low","citations":[{"doc_title":"...","excerpt":"short excerpt or paraphrase, under 20 words"}]}`;
+
+document.getElementById('rca-run').addEventListener('click', async ()=>{
+  const asset = document.getElementById('rca-asset').value;
+  const resultBox = document.getElementById('rca-result');
+  resultBox.innerHTML = '<div class="result loading-line"><span class="spinner"></span>Connecting failure history, OEM limits and inspection findings…</div>';
+  try{
+    const docs = DOCS.filter(d=>d.asset===asset);
+    const context = formatContext(docs);
+    const out = await callClaude(RCA_SYSTEM, `Context documents for asset ${asset}:\n\n${context}\n\nProduce the root cause analysis for ${asset}.`);
+    resultBox.innerHTML = `
+      <div class="result">
+        <span class="badge ${out.confidence}">CONFIDENCE: ${out.confidence?.toUpperCase()||'—'}</span>
+        <div class="label-sm" style="margin-top:14px;">Likely root cause</div>
+        <div class="answer-text">${out.likely_root_cause||''}</div>
+        <div class="label-sm">Contributing factors</div>
+        <ul class="actions">${(out.contributing_factors||[]).map(f=>`<li>${f}</li>`).join('')}</ul>
+        <div class="label-sm">Recommended checks before next shift</div>
+        <ul class="actions">${(out.recommended_checks||[]).map(f=>`<li>${f}</li>`).join('')}</ul>
+        <div class="label-sm">Evidence cited</div>
+        <div class="citation-list">${(out.citations||[]).map(c=>`<div class="citation"><b>${c.doc_title}</b><span>${c.excerpt}</span></div>`).join('')}</div>
+      </div>`;
+  } catch(err){
+    resultBox.innerHTML = `<div class="error-box">RCA agent couldn't complete the analysis: ${err.message}</div>`;
+  }
+});
+
+/* ====================== COMPLIANCE TAB ====================== */
+const COMPLIANCE_SYSTEM = `You are the Compliance Gap Agent inside PlantMind AI. You are given a baseline requirements checklist and the documents on record for one asset. For EACH checklist requirement, decide if it is "Met", "Partial" or "Gap" based strictly on the documents, citing the specific document that supports your judgment (or noting absence of evidence). Output ONLY valid JSON, no markdown fences, matching exactly:
+{"overall_status":"Compliant|Partial|Non-compliant","gaps":[{"requirement":"...","status":"Met|Partial|Gap","evidence":"doc title or 'No supporting document found'","note":"short explanation, under 18 words"}]}`;
+
+document.getElementById('comp-run').addEventListener('click', async ()=>{
+  const asset = document.getElementById('comp-asset').value;
+  const resultBox = document.getElementById('comp-result');
+  resultBox.innerHTML = '<div class="result loading-line"><span class="spinner"></span>Checking procedures and records against the baseline checklist…</div>';
+  try{
+    const docs = DOCS.filter(d=>d.asset===asset);
+    const context = formatContext(docs);
+    const checklistText = CHECKLIST.map(c=>`- ${c.requirement}`).join('\n');
+    const out = await callClaude(COMPLIANCE_SYSTEM, `Baseline checklist:\n${checklistText}\n\nDocuments on record for asset ${asset}:\n\n${context}\n\nEvaluate compliance for asset ${asset}.`);
+    resultBox.innerHTML = `
+      <div class="result">
+        <span class="badge ${out.overall_status}">OVERALL: ${out.overall_status?.toUpperCase()||'—'}</span>
+        <table class="gap-table">
+          <thead><tr><th>Requirement</th><th>Status</th><th>Evidence</th><th>Note</th></tr></thead>
+          <tbody>
+            ${(out.gaps||[]).map(g=>`<tr>
+              <td>${g.requirement}</td>
+              <td><span class="badge ${g.status}">${g.status}</span></td>
+              <td style="color:var(--text-dim)">${g.evidence}</td>
+              <td style="color:var(--text-dim)">${g.note}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(err){
+    resultBox.innerHTML = `<div class="error-box">Compliance agent couldn't complete the check: ${err.message}</div>`;
+  }
+});
+
+/* ====================== EVIDENCE BUILDER TAB ====================== */
+const EVIDENCE_SYSTEM = `You are the Audit Evidence Builder inside PlantMind AI. Using only the provided documents for one asset, write a short audit-ready narrative summarizing the asset's current status, open issues and evidence trail. Cite every document you reference by its exact title. Output ONLY valid JSON, no markdown fences, matching exactly:
+{"summary":"3-5 sentence audit-ready narrative referencing the included evidence by document title"}`;
+
+function buildEvidencePack(asset){
+  const docs = DOCS.filter(d=>d.asset===asset);
+  document.getElementById('ev-pack').innerHTML = docs.map(d=>`
+    <div class="ev-item">
+      <div class="meta">${d.type} · ${d.date} · ${d.title}</div>
+      <div class="body">${d.text}</div>
+    </div>`).join('');
+  return docs;
+}
+
+document.getElementById('ev-build').addEventListener('click', ()=>{
+  const asset = document.getElementById('ev-asset').value;
+  buildEvidencePack(asset);
+  document.getElementById('ev-summary').innerHTML = '';
+});
+
+document.getElementById('ev-summarize').addEventListener('click', async ()=>{
+  const asset = document.getElementById('ev-asset').value;
+  const docs = buildEvidencePack(asset);
+  const summaryBox = document.getElementById('ev-summary');
+  summaryBox.innerHTML = '<div class="result loading-line"><span class="spinner"></span>Writing the audit narrative…</div>';
+  try{
+    const context = formatContext(docs);
+    const out = await callClaude(EVIDENCE_SYSTEM, `Documents on record for asset ${asset}:\n\n${context}\n\nWrite the audit-ready narrative for ${asset}.`);
+    summaryBox.innerHTML = `<div class="result"><div class="label-sm" style="margin-top:0;">Audit summary — ${asset}</div><div class="answer-text">${out.summary||''}</div></div>`;
+  } catch(err){
+    summaryBox.innerHTML = `<div class="error-box">Couldn't generate the audit summary: ${err.message}</div>`;
+  }
+});
+
+document.getElementById('ev-download').addEventListener('click', ()=>{
+  const asset = document.getElementById('ev-asset').value;
+  const docs = DOCS.filter(d=>d.asset===asset);
+  const summaryEl = document.querySelector('#ev-summary .answer-text');
+  let out = `PLANTMIND AI — EVIDENCE PACK\nAsset: ${asset}\nGenerated: ${new Date().toISOString()}\n\n`;
+  if(summaryEl) out += `AUDIT SUMMARY\n${summaryEl.textContent}\n\n`;
+  out += docs.map(d=>`[${d.type} | ${d.date}] ${d.title}\n${d.text}\n`).join('\n');
+  const blob = new Blob([out], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `evidence-pack-${asset}.txt`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* ====================== INIT ====================== */
+updateStatus();
+renderKG();
+populateAssetSelects();
+window.addEventListener('resize', renderKG);
+</script>
+</body>
+</html>
